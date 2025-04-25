@@ -106,7 +106,7 @@ int main()
     int n_pixels = 0;
 
     // Carga los datos de enmascaramiento desde un archivo .txt (semilla + valores RGB)
-    unsigned int *maskingData = loadSeedMasking("M1.txt", seed, n_pixels);
+    unsigned int *maskingData = loadSeedMasking("M.bmp", seed, n_pixels);
     if (!maskingData) { delete[] pixelData; return -1; }
 
     // Ejemplo de máscara M simulada (en la práctica debes cargarla igual que las imágenes)
@@ -148,8 +148,7 @@ int main()
         // Verificar enmascaramiento
         bool coincide = verificarEnmascaramiento(imagenTemp, maskingData, mascara, seed, n_pixels);
         if (coincide) {
-            cout << "¡Secuencia correcta encontrada con rotación " << posiblesBits[b] << " bits!" << endl;
-            exportImage(imagenTemp, width, height, "Imagen_Recuperada.bmp");
+            cout << "Secuencia correcta encontrada con rotacion " << posiblesBits[b] << " bits!" << endl;
             delete[] imagenTemp;
             break;
         }
@@ -158,7 +157,7 @@ int main()
 
     bool esCorrecto = verificarEnmascaramiento(pixelData, maskingData, mascara, seed, n_pixels);
     if(esCorrecto) {
-        cout << "Enmascaramiento verificado: ¡La transformación coincide!" << endl;
+        cout << "Enmascaramiento verificado: La transformacion coincide!" << endl;
     } else {
         cout << "No coincide con el archivo de enmascaramiento." << endl;
     }
