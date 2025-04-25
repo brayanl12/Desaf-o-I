@@ -79,6 +79,73 @@ bool verificarEnmascaramiento(unsigned char* image, unsigned int* maskData, unsi
     }
     return true;
 }
+void buscarSecuencia(unsigned char* originalImage, unsigned int* maskingData, int totalPixels, int seed, int n_pixels, int width, int height) {
+    int operaciones[] = {0, 1, 2, 3};  // 0: rotate left, 1: rotate right, 2: shift left, 3: shift right
+    int bits[] = {1,2,3,4,5,6,7,8};
+
+    for (int op1 = 0; op1 < 4; op1++) {
+        for (int bits1 = 0; bits1 < 8; bits1++) {
+
+            unsigned char* temp1 = new unsigned char[totalPixels];
+            memcpy(temp1, originalImage, totalPixels);
+
+            // Aplicar primera operación
+            switch(op1) {
+            case 0: rotateBitsLeft(temp1, totalPixels, bits[bits1]); break;
+            case 1: rotateBitsRight(temp1, totalPixels, bits[bits1]); break;
+            case 2: shiftBitsLeft(temp1, totalPixels, bits[bits1]); break;
+            case 3: shiftBitsRight(temp1, totalPixels, bits[bits1]); break;
+            }
+
+            for (int op2 = 0; op2 < 4; op2++) {
+                for (int bits2 = 0; bits2 < 8; bits2++) {
+
+                    unsigned char* temp2 = new unsigned char[totalPixels];
+                    memcpy(temp2, temp1, totalPixels);
+
+                    // Aplicar segunda operación
+                    switch(op2) {
+                    case 0: rotateBitsLeft(temp2, totalPixels, bits[bits2]); break;
+                    case 1: rotateBitsRight(temp2, totalPixels, bits[bits2]); break;
+                    case 2: shiftBitsLeft(temp2, totalPixels, bits[bits2]); break;
+                    case 3: shiftBitsRight(temp2, totalPixels, bits[bits2]); break;
+                    }
+
+                    // Cargar la máscara de XOR
+                    int widthM, heightM;
+                    unsigned char* mascara = loadPixels("I_M.bmp", widthM, heightM);
+                    if (!mascara) {
+                        cout << "Error cargando la máscara." << endl;
+                        delete[] temp1;
+                        delete[] temp2;
+                        return;
+                    }
+
+                    // Aplicar XOR
+                    applyXOR(temp2, mascara, temp2, totalPixels);
+
+                    // Verificar
+                    if (verificarEnmascaramiento(temp2, maskingData, mascara, seed, n_pixels)) {
+                        cout << "¡Encontrada secuencia correcta!" << endl;
+                        cout << "Primera operación: " << (op1==0?"Rotate Left":op1==1?"Rotate Right":op1==2?"Shift Left":"Shift Right") << " con " << bits[bits1] << " bits" << endl;
+                        cout << "Segunda operación: " << (op2==0?"Rotate Left":op2==1?"Rotate Right":op2==2?"Shift Left":"Shift Right") << " con " << bits[bits2] << " bits" << endl;
+                        exportImage(temp2, width, height, "Imagen_Recuperada.bmp");
+                        delete[] temp1;
+                        delete[] temp2;
+                        delete[] mascara;
+                        return;
+                    }
+
+                    delete[] temp2;
+                    delete[] mascara;
+                }
+            }
+            delete[] temp1;
+        }
+    }
+    cout << "No se encontró ninguna combinación correcta." << endl;
+}
+
 //FIN
 
 int main()
@@ -161,6 +228,7 @@ int main()
     } else {
         cout << "No coincide con el archivo de enmascaramiento." << endl;
     }
+    buscarSecuencia(pixelData, maskingData, width * height * 3, seed, n_pixels, width, height);
 
     // === Liberar memoria ===
     delete[] pixelData;
